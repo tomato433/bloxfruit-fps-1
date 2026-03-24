@@ -1,0 +1,67 @@
+-- Ultra Light First Flag + Player Box
+
+-- 軽量化（超軽量）
+local Lighting = game:GetService("Lighting")
+Lighting.GlobalShadows = false
+Lighting.FogEnd = 9e9
+Lighting.Brightness = 1
+
+for _, v in pairs(game:GetDescendants()) do
+    if v:IsA("BasePart") then
+        v.Material = Enum.Material.SmoothPlastic
+        v.Reflectance = 0
+    elseif v:IsA("Decal") then
+        v.Transparency = 1
+    elseif v:IsA("Texture") then
+        v.Transparency = 1
+    elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+        v.Enabled = false
+    end
+end
+
+settings().Rendering.QualityLevel = "Level01"
+
+-- プレイヤー枠（Box ESP風）
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local function createBox(player)
+    if player == Players.LocalPlayer then return end
+    
+    RunService.RenderStepped:Connect(function()
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            
+            if not player.Character:FindFirstChild("ESPBox") then
+                local box = Instance.new("BoxHandleAdornment")
+                box.Name = "ESPBox"
+                box.Adornee = player.Character.HumanoidRootPart
+                box.Size = Vector3.new(4,6,2)
+                box.Color3 = Color3.fromRGB(0,0,0)
+                box.Transparency = 0.5
+                box.AlwaysOnTop = true
+                box.ZIndex = 5
+                box.Parent = player.Character
+            end
+            
+        end
+    end)
+end
+
+-- 全プレイヤーに適用
+for _, p in pairs(Players:GetPlayers()) do
+    createBox(p)
+end
+
+Players.PlayerAdded:Connect(createBox)
+
+-- 表示
+local gui = Instance.new("ScreenGui", game.CoreGui)
+
+local label = Instance.new("TextLabel", gui)
+label.Size = UDim2.new(0, 200, 0, 40)
+label.Position = UDim2.new(0, 10, 0, 10)
+label.BackgroundTransparency = 1
+label.Text = "ULTRA FPS MODE"
+label.Font = Enum.Font.SciFi
+label.TextScaled = true
+label.TextColor3 = Color3.fromRGB(0,255,0)
