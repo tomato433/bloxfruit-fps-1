@@ -1,0 +1,115 @@
+-- ULTIMATE First Flag + Smart ESP + GUI
+
+local Lighting = game:GetService("Lighting")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local localPlayer = Players.LocalPlayer
+local enabled = true
+
+-- 軽量化関数
+local function applyFPSBoost()
+    Lighting.GlobalShadows = false
+    Lighting.FogEnd = 9e9
+    Lighting.Brightness = 1
+
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("BasePart") then
+            v.Material = Enum.Material.SmoothPlastic
+            v.Reflectance = 0
+        elseif v:IsA("Decal") or v:IsA("Texture") then
+            v.Transparency = 1
+        elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+            v.Enabled = false
+        end
+    end
+
+    settings().Rendering.QualityLevel = "Level01"
+end
+
+-- ESP追加
+local function addBox(character)
+    if not character then return end
+    
+    local root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    if character:FindFirstChild("ESPBox") then return end
+
+    local box = Instance.new("BoxHandleAdornment")
+    box.Name = "ESPBox"
+    box.Adornee = root
+    box.Size = Vector3.new(4,6,2)
+    box.Transparency = 0.3
+    box.AlwaysOnTop = true
+    box.ZIndex = 5
+    box.Parent = character
+end
+
+-- プレイヤー設定
+local function setupPlayer(p)
+    if p == localPlayer then return end
+
+    p.CharacterAdded:Connect(addBox)
+
+    if p.Character then
+        addBox(p.Character)
+    end
+end
+
+for _, p in pairs(Players:GetPlayers()) do
+    setupPlayer(p)
+end
+
+Players.PlayerAdded:Connect(setupPlayer)
+
+-- 色変化（距離）
+RunService.RenderStepped:Connect(function()
+    if not enabled then return end
+
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= localPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            
+            local box = p.Character:FindFirstChild("ESPBox")
+            if box then
+                local dist = (localPlayer.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
+                
+                if dist < 50 then
+                    box.Color3 = Color3.fromRGB(255,0,0)
+                else
+                    box.Color3 = Color3.fromRGB(0,255,0)
+                end
+            end
+        end
+    end
+end)
+
+-- GUI
+local gui = Instance.new("ScreenGui", game.CoreGui)
+
+local button = Instance.new("TextButton", gui)
+button.Size = UDim2.new(0, 200, 0, 50)
+button.Position = UDim2.new(0, 10, 0, 10)
+button.Text = "FPS BOOST: ON"
+button.Font = Enum.Font.SciFi
+button.TextScaled = true
+button.BackgroundColor3 = Color3.fromRGB(0,0,0)
+button.TextColor3 = Color3.fromRGB(0,255,0)
+
+-- ドラッグ可能
+button.Active = true
+button.Draggable = true
+
+-- ON/OFF切り替え
+button.MouseButton1Click:Connect(function()
+    enabled = not enabled
+    
+    if enabled then
+        button.Text = "FPS BOOST: ON"
+        applyFPSBoost()
+    else
+        button.Text = "FPS BOOST: OFF"
+    end
+end)
+
+-- 初期起動
+applyFPSBoost()
